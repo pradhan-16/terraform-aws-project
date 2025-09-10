@@ -5,7 +5,7 @@ variable "region" {
 
 variable "aws_profile" {
   type        = string
-  description = "AWS CLI profile (surbhi or harish)"
+  description = "AWS CLI profile (chanchal or piyush)"
 }
 
 variable "env_name" {
