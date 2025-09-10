@@ -1,33 +1,78 @@
-# resource "aws_vpc" "testvpc" {
-#   cidr_block       = "192.168.4.0/24"
-#   instance_tenancy = "default"
-#   enable_dns_support = true
-#   enable_dns_hostnames = true
+# VPC
+resource "aws_vpc" "main" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  tags = {
+    Name = "${var.env_name}-vpc"
+  }
+}
 
-#   tags = local.common_tags
-# }
+# Subnet
+resource "aws_subnet" "public" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+  availability_zone       = "${var.region}a"
 
-# resource "aws_subnet" "testsubnet" {
-#   vpc_id     = aws_vpc.testvpc.id
-#   cidr_block = "192.168.4.0/27"
-#   map_public_ip_on_launch = true
-#   availability_zone = "eu-central-1a"
+  tags = {
+    Name = "${var.env_name}-public-subnet"
+  }
+}
 
-#   tags = local.common_tags
-# }
+# Internet Gateway
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main.id
+  tags = {
+    Name = "${var.env_name}-igw"
+  }
+}
 
-# output "public_subnet_id" {
-#     value = aws_subnet.testsubnet.id
-# }
+# Route Table
+resource "aws_route_table" "rt" {
+  vpc_id = aws_vpc.main.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
 
-# resource "aws_instance" "web" {
-#    count =      2
-#    ami           = var.ami
-#    instance_type = var.environment == "development" ? "t2.small" : "t2.large"
-#    subnet_id = aws_subnet.testsubnet.id
-   
+  tags = {
+    Name = "${var.env_name}-rt"
+  }
+}
 
-#     tags = {
-#         Name = "HelloWorld-${count.index}"
-#     }
-# }
+# Route Table Association
+resource "aws_route_table_association" "rta" {
+  subnet_id      = aws_subnet.public.id
+  route_table_id = aws_route_table.rt.id
+}
+
+# Security Group
+resource "aws_security_group" "sg" {
+  vpc_id = aws_vpc.main.id
+  name   = "${var.env_name}-sg"
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.env_name}-sg"
+  }
+}
