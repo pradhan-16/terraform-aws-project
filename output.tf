@@ -69,3 +69,9 @@ output "private_subnets" {
 }
 
 
+output "private_key_pem" {
+  value     = tls_private_key.mykey.private_key_pem
+  sensitive = true
+}
+
+
