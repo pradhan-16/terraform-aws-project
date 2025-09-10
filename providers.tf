@@ -1,9 +1,12 @@
-variable "region" {
-  type    = string
-  default = "ap-south-1"
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+  }
 }
 
-variable "aws_profile" {
-  type    = string
+provider "aws" {
+  region  = var.region
+  profile = var.aws_profile
 }
-
