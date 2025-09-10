@@ -31,4 +31,7 @@ resource "aws_db_instance" "mydb" {
   vpc_security_group_ids  = [aws_security_group.sg.id]
   publicly_accessible     = true   # ✅ keep true only for testing (not best practice in prod)
 
-  tags =
+  tags = {
+    Name = "${var.env_name}-rds"
+  }
+}
