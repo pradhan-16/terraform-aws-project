@@ -1,9 +1,14 @@
 # ---------------------
-# # Key Pair (Commented Out)
+# Generate Key Pair (Terraform managed)
 # ---------------------
+resource "tls_private_key" "mykey" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
 resource "aws_key_pair" "mykey" {
   key_name   = "terraform-key-${var.env_name}"
-  public_key = file("~/.ssh/id_rsa.pub")  # अपने local machine की public key use करो
+  public_key = tls_private_key.mykey.public_key_openssh
 }
 
 # ---------------------
@@ -26,7 +31,7 @@ resource "aws_instance" "web" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.public_a.id
-  key_name               = aws_key_pair.mykey.key_name  # Commented Out
+  key_name               = aws_key_pair.mykey.key_name
   vpc_security_group_ids = [aws_security_group.sg.id]
 
   user_data = <<-EOF
